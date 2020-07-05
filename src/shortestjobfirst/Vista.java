@@ -26,7 +26,7 @@ public class Vista extends JFrame implements ActionListener, Runnable {
     JTextField txtProcesosInicio;
     JPanel panelSuperior;
     JPanel panelCentral = new JPanel(null);
-    JPanel panelInferior = new JPanel(null);
+    JPanel panelInferior = new JPanel();
     JLabel etiqueta = new JLabel("Tiempo: " + tiempo);
 
     DefaultTableModel modeloC;
@@ -103,6 +103,10 @@ public class Vista extends JFrame implements ActionListener, Runnable {
 
         //PANEL INFERIOR
         add(panelInferior, BorderLayout.SOUTH);
+        btnGraficar = new JButton("Graficar");
+
+        panelInferior.add(btnGraficar);
+        btnGraficar.addActionListener(this);
 
         hilo = new Thread(this);
 
@@ -135,6 +139,27 @@ public class Vista extends JFrame implements ActionListener, Runnable {
             entraSC();
             procesoActual = (int) modeloSC.getValueAt(0, 0) - 1;
 
+        } else if (e.getSource() == btnGraficar) {
+
+            int proc = modeloC.getRowCount();
+            System.out.println(proc);
+
+            int matriz1[][] = new int[proc][2];
+            int matriz2[][] = new int[proc][2];
+
+            for (int i = 0; i < proc; i++) {
+                matriz1[i][0] = (int) modeloC.getValueAt(i, 3);
+                matriz2[i][0] = (int) modeloC.getValueAt(i, 1);
+            }
+            for (int i = 0; i < proc; i++) {
+                matriz1[i][1] = (int) modeloC.getValueAt(i, 4);
+                matriz2[i][1] = (int) modeloC.getValueAt(i, 3);
+            }
+
+            final Gantt demo = new Gantt("Diagrama de Gantt", matriz1, matriz2, proc);
+            demo.pack();
+            RefineryUtilities.centerFrameOnScreen(demo);
+            demo.setVisible(true);
         }
 
     }
