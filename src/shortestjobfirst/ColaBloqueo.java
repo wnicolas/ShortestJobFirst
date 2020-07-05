@@ -26,6 +26,7 @@ public class ColaBloqueo {
         while (recorrido != null) {
             if (recorrido.proceso == proceso) {
                 recorrido.bloqueado = true;
+                System.out.println("Nodo con proceso: "+recorrido.proceso+" y tiene estado bloqueado: "+recorrido.bloqueado);
             }
             recorrido = recorrido.siguiente;
         }

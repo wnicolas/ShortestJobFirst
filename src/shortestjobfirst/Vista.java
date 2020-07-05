@@ -12,7 +12,9 @@ import org.jfree.ui.RefineryUtilities;
 public class Vista extends JFrame implements ActionListener, Runnable {
 
     int tiempo = 0;
+    int procesoActual;
     int procesoAnterior;
+    int contador = 0;
 
     ColaListos listos = new ColaListos();
     ColaBloqueo bloqueo = new ColaBloqueo();
@@ -25,6 +27,7 @@ public class Vista extends JFrame implements ActionListener, Runnable {
     JPanel panelSuperior;
     JPanel panelCentral = new JPanel(null);
     JPanel panelInferior = new JPanel(null);
+    JLabel etiqueta = new JLabel("Tiempo: " + tiempo);
 
     DefaultTableModel modeloC;
     DefaultTableModel modeloSC;
@@ -48,7 +51,7 @@ public class Vista extends JFrame implements ActionListener, Runnable {
         panelSuperior = new JPanel();
         add(panelSuperior, BorderLayout.NORTH);
         txtProcesosInicio = new JTextField("Procesos");
-        btnAñadir=new JButton("Añadir proceso");
+        btnAñadir = new JButton("Añadir proceso");
         btnAñadir.addActionListener(this);
         btnIniciar = new JButton("Iniciar");
         btnIniciar.addActionListener(this);
@@ -58,6 +61,7 @@ public class Vista extends JFrame implements ActionListener, Runnable {
         panelSuperior.add(btnAñadir);
         panelSuperior.add(btnIniciar);
         panelSuperior.add(btnBloquear);
+        //panelSuperior.add(etiqueta);
 
         //PANEL CENTRAL
         add(panelCentral, BorderLayout.CENTER);
@@ -118,9 +122,19 @@ public class Vista extends JFrame implements ActionListener, Runnable {
         } else if (e.getSource() == btnIniciar) {
             hilo.start();
             entraSC();
-        }
-         else if (e.getSource() == btnBloquear) {
+        } else if (e.getSource() == btnBloquear) {
+
+            contador = (int) modeloSC.getValueAt(0, 1) - (int) modeloSC.getValueAt(0, 2);
+            int procesoBloqueado = (int) modeloSC.getValueAt(0, 0);
+            listos.bloquear(procesoBloqueado);
+            modeloSC.removeRow(0);
+
+            Object p[] = {procesoBloqueado, "NULO", 5};
+            modeloB.addRow(p);
+
             entraSC();
+            procesoActual = (int) modeloSC.getValueAt(0, 0) - 1;
+
         }
 
     }
@@ -132,14 +146,13 @@ public class Vista extends JFrame implements ActionListener, Runnable {
         int referenciaNodo = 0;
 
         while (recorrido != null) {
-            if (recorrido.rafaga < menor && recorrido.calculado == false) {
+            if (recorrido.rafaga < menor && recorrido.calculado == false && recorrido.bloqueado == false) {
                 menor = recorrido.rafaga;
                 referenciaNodo = recorrido.proceso;
             }
             recorrido = recorrido.siguiente;
 
         }
-        System.out.println("Este es el menor: " + menor + "//Este es el proceso: " + referenciaNodo);
 
         recorrido = listos.inicio;
         while (recorrido != null) {
@@ -161,68 +174,87 @@ public class Vista extends JFrame implements ActionListener, Runnable {
 
     }
 
+    public void actualizarB() {
+
+        if (modeloB.getRowCount() > 0) {
+            if ((int) modeloB.getValueAt(0, 2) == 0) {
+                modeloC.setValueAt(tiempo - 2, (int) modeloB.getValueAt(0, 0) - 1, 1);
+                listos.desbloquear((int) modeloB.getValueAt(0, 0));
+                modeloB.removeRow(0);
+
+            } else {
+                modeloB.setValueAt((int) modeloB.getValueAt(0, 2) - 1, 0, 2);
+            }
+        }
+
+    }
+
     @Override
     public void run() {
         while (true) {
             try {
 
-                Thread.sleep(500);
+                Thread.sleep(800);
                 tiempo += 1;
 
-                if ((int) (modeloSC.getValueAt(0, 2)) == 0) {
+                if (modeloSC.getRowCount() > 0) {
+                    if ((int) (modeloSC.getValueAt(0, 2)) == 0) {
 
-                    int procesoActual = (int) modeloSC.getValueAt(0, 0) - 1;
+                        procesoActual = (int) modeloSC.getValueAt(0, 0) - 1;
 
-                    listos.setCalculado((int) modeloSC.getValueAt(0, 0));
+                        listos.setCalculado((int) modeloSC.getValueAt(0, 0));
 
-                    if (tiempo - 1 == (int) modeloSC.getValueAt(0, 1)) {
-                        int proceso = (int) modeloC.getValueAt(procesoActual, 0);
-                        int tLlegada = (int) modeloC.getValueAt(procesoActual, 1);
-                        int tFinal = (int) modeloC.getValueAt(procesoActual, 2);
-                        int retorno = tFinal - (int) modeloC.getValueAt(procesoActual, 1);
-                        int rafaga = (int) modeloC.getValueAt(procesoActual, 2);
-                        int espera = retorno - rafaga;
-                        Object p[] = {proceso, tLlegada, rafaga, 0, tFinal, retorno, espera};
+                        if (tiempo - 1 == (int) modeloSC.getValueAt(0, 1)) {
+                            int proceso = (int) modeloC.getValueAt(procesoActual, 0);
+                            int tLlegada = (int) modeloC.getValueAt(procesoActual, 1);
+                            int tFinal = (int) modeloC.getValueAt(procesoActual, 2);
+                            int retorno = tFinal - (int) modeloC.getValueAt(procesoActual, 1);
+                            int rafaga = (int) modeloC.getValueAt(procesoActual, 2);
+                            int espera = retorno - rafaga;
+                            Object p[] = {proceso, tLlegada, rafaga, 0, tFinal, retorno, espera};
 
-                        modeloC.insertRow((int) modeloSC.getValueAt(0, 0) - 1, p);
-                        modeloC.removeRow((int) modeloSC.getValueAt(0, 0));
-                        entraSC();
-                        procesoAnterior = proceso;
+                            modeloC.insertRow((int) modeloSC.getValueAt(0, 0) - 1, p);
+                            modeloC.removeRow((int) modeloSC.getValueAt(0, 0));
+                            entraSC();
+                            contador = 0;
+                            procesoAnterior = proceso;
+                        } else {
+
+                            int proceso = (int) modeloC.getValueAt(procesoActual, 0);
+                            int tLlegada = (int) modeloC.getValueAt(procesoActual, 1);
+                            int rafaga = (int) modeloC.getValueAt(procesoActual, 2);
+                            int tComienzo = (int) modeloC.getValueAt(procesoAnterior - 1, 4) + contador;
+                            int tFinal = (int) modeloC.getValueAt(procesoActual, 2) + tComienzo;
+                            int retorno = tFinal - (int) modeloC.getValueAt(procesoActual, 1);
+                            int espera = retorno - rafaga;
+                            Object p[] = {proceso, tLlegada, rafaga, tComienzo, tFinal, retorno, espera};
+
+                            modeloC.insertRow((int) modeloSC.getValueAt(0, 0) - 1, p);
+                            modeloC.removeRow((int) modeloSC.getValueAt(0, 0));
+
+                            entraSC();
+                            contador = 0;
+                            procesoAnterior = proceso;
+
+                            int nuevoProceso = (int) modeloSC.getValueAt(0, 0);
+
+                        }
+                        contador = 0;
+                        modeloSC.removeRow(0);
+
+                        //entraSC();
                     } else {
 
-                        int proceso = (int) modeloC.getValueAt(procesoActual, 0);
-                        int tLlegada = (int) modeloC.getValueAt(procesoActual, 1);
-                        int rafaga = (int) modeloC.getValueAt(procesoActual, 2);
-                        
-                        int tComienzo=(int)modeloC.getValueAt(procesoAnterior-1, 4);
-                        int tFinal = (int) modeloC.getValueAt(procesoActual, 2)+tComienzo;
-                        int retorno = tFinal - (int) modeloC.getValueAt(procesoActual, 1);
-                        int espera = retorno - rafaga;
-                        Object p[] = {proceso, tLlegada, rafaga, tComienzo, tFinal, retorno, espera};
-
-                        modeloC.insertRow((int) modeloSC.getValueAt(0, 0) - 1, p);
-                        modeloC.removeRow((int) modeloSC.getValueAt(0, 0));
-                        
-                        entraSC();
-                        procesoAnterior = proceso;
-
-                        System.out.println("El anterior proceso es " + procesoAnterior);
-                        int nuevoProceso = (int) modeloSC.getValueAt(0, 0);
-                        System.out.println("******Calcular " + nuevoProceso);
-
+                        actualizarSC();
                     }
-
-                    modeloSC.removeRow(0);
-                    System.out.println("Sección crítica terminada");
-                    //entraSC();
-                } else {
-                    actualizarSC();
                 }
 
+                actualizarB();
+                //etiqueta.setText("Tiempo: "+tiempo);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Vista.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //System.out.println(tiempo);
+
         }
     }
 

@@ -23,20 +23,40 @@ public class ColaListos {
 
     public void eliminarNodo() {
         inicio = inicio.siguiente;
-        inicio.anterior=null;
+        inicio.anterior = null;
     }
-    
-    public void setCalculado(int proceso){
-        Nodo recorrido=inicio;
-        while(recorrido!=null){
-            if(recorrido.proceso==proceso){
-                recorrido.calculado=true;
+
+    public void bloquear(int proceso) {
+        Nodo recorrido = inicio;
+        while (recorrido != null) {
+            if (recorrido.proceso == proceso) {
+                recorrido.bloqueado = true;
             }
-            recorrido=recorrido.siguiente;
+            recorrido = recorrido.siguiente;
         }
     }
     
-/*
+    public void desbloquear(int proceso) {
+        Nodo recorrido = inicio;
+        while (recorrido != null) {
+            if (recorrido.proceso == proceso) {
+                recorrido.bloqueado = false;
+            }
+            recorrido = recorrido.siguiente;
+        }
+    }
+
+    public void setCalculado(int proceso) {
+        Nodo recorrido = inicio;
+        while (recorrido != null) {
+            if (recorrido.proceso == proceso) {
+                recorrido.calculado = true;
+            }
+            recorrido = recorrido.siguiente;
+        }
+    }
+
+    /*
     public void eliminarNodo(int proceso) {
         Nodo recorrido = inicio;
         while (recorrido!= null) {
@@ -74,7 +94,7 @@ public class ColaListos {
         }
         
     }
-*/
+     */
     public void mostrarLista() {
         Nodo recorrido = inicio;
         while (recorrido != null) {
